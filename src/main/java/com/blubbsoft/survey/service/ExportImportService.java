@@ -1,6 +1,9 @@
 package com.blubbsoft.survey.service;
 
-import com.blubbsoft.survey.model.*;
+import com.blubbsoft.survey.model.Question;
+import com.blubbsoft.survey.model.Questionnaire;
+import com.blubbsoft.survey.model.ResultEntry;
+import com.blubbsoft.survey.model.SurveyResult;
 import com.blubbsoft.survey.session.SurveySession;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -23,13 +26,10 @@ public class ExportImportService {
     private final ObjectMapper objectMapper;
 
     public ExportImportService(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
+        this.objectMapper = objectMapper.copy();
         this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
     }
 
-    /**
-     * Exports the current survey session as JSON bytes.
-     */
     public byte[] exportToJson(SurveySession session, Questionnaire questionnaire) {
         try {
             SurveyResult result = buildSurveyResult(session, questionnaire);
@@ -39,25 +39,19 @@ public class ExportImportService {
         }
     }
 
-    /**
-     * Imports survey results from an uploaded JSON file.
-     */
     public SurveyResult importFromJson(MultipartFile file) {
         try {
             return objectMapper.readValue(file.getInputStream(), SurveyResult.class);
         } catch (IOException e) {
-            throw new IllegalArgumentException("Ung\u00fcltige JSON-Datei: " + e.getMessage(), e);
+            throw new IllegalArgumentException("Ungültige JSON-Datei: " + e.getMessage(), e);
         }
     }
 
-    /**
-     * Imports survey results from a JSON byte array (for testing).
-     */
     public SurveyResult importFromJson(byte[] jsonBytes) {
         try {
             return objectMapper.readValue(jsonBytes, SurveyResult.class);
         } catch (IOException e) {
-            throw new IllegalArgumentException("Ung\u00fcltige JSON-Datei: " + e.getMessage(), e);
+            throw new IllegalArgumentException("Ungültige JSON-Datei: " + e.getMessage(), e);
         }
     }
 
@@ -65,29 +59,22 @@ public class ExportImportService {
         List<ResultEntry> entries = new ArrayList<>();
         Map<String, List<String>> answers = session.getAnswers();
 
-        for (Question question : questionnaire.getQuestions()) {
-            List<String> answer = answers.get(question.getId());
+        for (Question question : questionnaire.questions()) {
+            List<String> answer = answers.get(question.id());
             if (answer != null && !answer.isEmpty()) {
                 entries.add(new ResultEntry(
-                        question.getId(),
-                        question.getText(),
-                        question.getType().name(),
-                        answer
-                ));
+                        question.id(), question.text(), question.type().name(), answer));
             }
         }
 
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        return new SurveyResult(questionnaire.getTitle(), timestamp, entries);
+        return new SurveyResult(questionnaire.title(), timestamp, entries);
     }
 
-    /**
-     * Generates a filename for the export: ergebnisse-{title}-{timestamp}.json
-     */
     public String generateExportFilename(Questionnaire questionnaire) {
-        String title = questionnaire.getTitle()
+        String title = questionnaire.title()
                 .toLowerCase()
-                .replaceAll("[^a-z0-9\u00e4\u00f6\u00fc\u00df]", "-")
+                .replaceAll("[^a-z0-9äöüß]", "-")
                 .replaceAll("-+", "-");
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
         return "ergebnisse-" + title + "-" + timestamp + ".json";

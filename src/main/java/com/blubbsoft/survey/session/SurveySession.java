@@ -40,10 +40,6 @@ public class SurveySession {
         return history;
     }
 
-    public String getCurrentQuestionId() {
-        return history.isEmpty() ? null : history.peek();
-    }
-
     public void reset() {
         answers.clear();
         history.clear();
@@ -55,18 +51,15 @@ public class SurveySession {
      */
     public void invalidateAnswersAfter(String questionId) {
         boolean found = false;
-        List<String> toRemove = new ArrayList<>();
-        for (String key : answers.keySet()) {
+        Iterator<String> it = answers.keySet().iterator();
+        while (it.hasNext()) {
+            String key = it.next();
             if (found) {
-                toRemove.add(key);
-            }
-            if (key.equals(questionId)) {
+                it.remove();
+                history.remove(key);
+            } else if (key.equals(questionId)) {
                 found = true;
             }
-        }
-        for (String key : toRemove) {
-            answers.remove(key);
-            history.remove(key);
         }
     }
 }

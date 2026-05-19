@@ -50,9 +50,14 @@ public class QuestionnaireService {
         return questionnaire;
     }
 
+    /** Package-private setter for unit testing without reflection. */
+    void setQuestionnaire(Questionnaire questionnaire) {
+        this.questionnaire = questionnaire;
+    }
+
     public Question getQuestionById(String id) {
-        return questionnaire.getQuestions().stream()
-                .filter(q -> q.getId().equals(id))
+        return questionnaire.questions().stream()
+                .filter(q -> q.id().equals(id))
                 .findFirst()
                 .orElse(null);
     }
@@ -60,24 +65,19 @@ public class QuestionnaireService {
     /**
      * Returns the next relevant question for the survey.
      * Skips already-answered questions and those whose condition is not met.
-     *
-     * @param session the current survey session
-     * @return the next question, or null if all relevant questions are answered
      */
     public Question getNextQuestion(SurveySession session) {
         Map<String, List<String>> answers = session.getAnswers();
 
-        for (Question question : questionnaire.getQuestions()) {
-            // Skip already answered
-            if (answers.containsKey(question.getId())) {
+        for (Question question : questionnaire.questions()) {
+            if (answers.containsKey(question.id())) {
                 continue;
             }
-            // Skip if condition not met
-            if (!conditionEvaluator.isConditionMet(question.getCondition(), answers)) {
+            if (!conditionEvaluator.isConditionMet(question.condition(), answers)) {
                 continue;
             }
             return question;
         }
-        return null; // All questions answered
+        return null;
     }
 }

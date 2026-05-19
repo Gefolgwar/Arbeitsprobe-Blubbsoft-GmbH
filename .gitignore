@@ -15,3 +15,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Tool artifacts
+graphify-out/

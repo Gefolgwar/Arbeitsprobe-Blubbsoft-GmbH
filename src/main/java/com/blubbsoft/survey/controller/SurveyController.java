@@ -1,8 +1,8 @@
 package com.blubbsoft.survey.controller;
 
 import com.blubbsoft.survey.model.Question;
-import com.blubbsoft.survey.model.QuestionType;
 import com.blubbsoft.survey.model.ResultEntry;
+import com.blubbsoft.survey.model.SummaryEntry;
 import com.blubbsoft.survey.model.SurveyResult;
 import com.blubbsoft.survey.service.ExportImportService;
 import com.blubbsoft.survey.service.QuestionnaireService;
@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -50,14 +49,12 @@ public class SurveyController {
             return "redirect:/summary";
         }
 
-        model.addAttribute("title", questionnaireService.getQuestionnaire().getTitle());
+        model.addAttribute("title", questionnaireService.getQuestionnaire().title());
         model.addAttribute("question", nextQuestion);
-        model.addAttribute("questionNumber", getQuestionNumber(nextQuestion.getId()));
-        model.addAttribute("totalQuestions", questionnaireService.getQuestionnaire().getQuestions().size());
+        model.addAttribute("questionNumber", getQuestionNumber(nextQuestion.id()));
+        model.addAttribute("totalQuestions", questionnaireService.getQuestionnaire().questions().size());
         model.addAttribute("canGoBack", !session.getHistory().isEmpty());
-
-        List<String> previousAnswer = session.getAnswers().get(nextQuestion.getId());
-        model.addAttribute("previousAnswer", previousAnswer);
+        model.addAttribute("previousAnswer", session.getAnswers().get(nextQuestion.id()));
 
         return "survey";
     }
@@ -76,8 +73,8 @@ public class SurveyController {
         if ("MATRIX".equals(questionType)) {
             answerValues = new ArrayList<>();
             Question question = questionnaireService.getQuestionById(questionId);
-            if (question != null && question.getRows() != null) {
-                for (String row : question.getRows()) {
+            if (question != null && question.rows() != null) {
+                for (String row : question.rows()) {
                     String value = allParams.get("row_" + row);
                     if (value != null) {
                         answerValues.add(row + ": " + value);
@@ -114,12 +111,11 @@ public class SurveyController {
 
     @GetMapping("/summary")
     public String summary(Model model) {
-        Question nextQuestion = questionnaireService.getNextQuestion(session);
-        if (nextQuestion != null) {
+        if (questionnaireService.getNextQuestion(session) != null) {
             return "redirect:/survey";
         }
 
-        model.addAttribute("title", questionnaireService.getQuestionnaire().getTitle());
+        model.addAttribute("title", questionnaireService.getQuestionnaire().title());
         model.addAttribute("results", buildSummaryResults());
         model.addAttribute("imported", false);
 
@@ -142,15 +138,15 @@ public class SurveyController {
         try {
             SurveyResult surveyResult = exportImportService.importFromJson(file);
 
-            model.addAttribute("title", surveyResult.getQuestionnaire());
-            model.addAttribute("results", convertResultEntriesToSummary(surveyResult.getResults()));
+            model.addAttribute("title", surveyResult.questionnaire());
+            model.addAttribute("results", toSummaryEntries(surveyResult.results()));
             model.addAttribute("imported", true);
-            model.addAttribute("exportedAt", surveyResult.getExportedAt());
+            model.addAttribute("exportedAt", surveyResult.exportedAt());
 
             return "summary";
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", e.getMessage());
-            model.addAttribute("title", questionnaireService.getQuestionnaire().getTitle());
+            model.addAttribute("title", questionnaireService.getQuestionnaire().title());
             model.addAttribute("results", buildSummaryResults());
             model.addAttribute("imported", false);
             return "summary";
@@ -163,59 +159,45 @@ public class SurveyController {
         return "redirect:/survey";
     }
 
-    private List<Map<String, Object>> buildSummaryResults() {
-        List<Map<String, Object>> results = new ArrayList<>();
-        Map<String, List<String>> answers = session.getAnswers();
+    // --- Summary helpers ---
 
-        for (Map.Entry<String, List<String>> entry : answers.entrySet()) {
+    private List<SummaryEntry> buildSummaryResults() {
+        List<SummaryEntry> results = new ArrayList<>();
+
+        for (var entry : session.getAnswers().entrySet()) {
             Question question = questionnaireService.getQuestionById(entry.getKey());
             if (question == null) continue;
 
-            Map<String, Object> result = new LinkedHashMap<>();
-            result.put("questionId", question.getId());
-            result.put("questionText", question.getText());
-            result.put("questionType", question.getType().name());
-            result.put("answers", entry.getValue());
-
-            if (question.getType() == QuestionType.MATRIX) {
-                result.put("displayAnswer", String.join(", ", entry.getValue()));
-            } else if (question.getType() == QuestionType.MULTIPLE_CHOICE) {
-                result.put("displayAnswer", String.join(", ", entry.getValue()));
-            } else {
-                result.put("displayAnswer", entry.getValue().isEmpty() ? "" : entry.getValue().get(0));
-            }
-
-            results.add(result);
+            results.add(toSummaryEntry(
+                    question.id(), question.text(), question.type().name(), entry.getValue()));
         }
         return results;
     }
 
-    private List<Map<String, Object>> convertResultEntriesToSummary(List<ResultEntry> entries) {
-        List<Map<String, Object>> results = new ArrayList<>();
-        for (ResultEntry entry : entries) {
-            Map<String, Object> result = new LinkedHashMap<>();
-            result.put("questionId", entry.getQuestionId());
-            result.put("questionText", entry.getQuestionText());
-            result.put("questionType", entry.getQuestionType());
-            result.put("answers", entry.getAnswers());
+    private List<SummaryEntry> toSummaryEntries(List<ResultEntry> entries) {
+        return entries.stream()
+                .map(e -> toSummaryEntry(e.questionId(), e.questionText(), e.questionType(), e.answers()))
+                .toList();
+    }
 
-            if ("MATRIX".equals(entry.getQuestionType())) {
-                result.put("displayAnswer", String.join(", ", entry.getAnswers()));
-            } else if ("MULTIPLE_CHOICE".equals(entry.getQuestionType())) {
-                result.put("displayAnswer", String.join(", ", entry.getAnswers()));
-            } else {
-                result.put("displayAnswer", entry.getAnswers().isEmpty() ? "" : entry.getAnswers().get(0));
-            }
+    private SummaryEntry toSummaryEntry(String questionId, String questionText,
+                                        String questionType, List<String> answers) {
+        String displayAnswer = formatDisplayAnswer(questionType, answers);
+        return new SummaryEntry(questionId, questionText, questionType, answers, displayAnswer);
+    }
 
-            results.add(result);
+    private String formatDisplayAnswer(String questionType, List<String> answers) {
+        if (answers.isEmpty()) return "";
+        if ("MATRIX".equals(questionType) || "MULTIPLE_CHOICE".equals(questionType)) {
+            return String.join(", ", answers);
         }
-        return results;
+        return answers.get(0);
     }
 
     private int getQuestionNumber(String questionId) {
-        var questions = questionnaireService.getQuestionnaire().getQuestions();
+        var questions = questionnaireService.getQuestionnaire().questions();
         for (int i = 0; i < questions.size(); i++) {
-            if (questions.get(i).getId().equals(questionId)) {
+            if (questions.get(i).id().equals(questionId)) {
                 return i + 1;
             }
         }
