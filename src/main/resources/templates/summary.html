@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'Zusammenfassung — ' + ${title}">Zusammenfassung</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Zusammenfassung</h1>
+        <h2 th:text="${title}">Fragebogen</h2>
+
+        <div th:if="${imported}" class="imported-badge">
+            <strong>Importierte Ergebnisse</strong>
+        </div>
+
+        <div class="summary-list">
+            <div th:each="result : ${results}" class="summary-item">
+                <div class="summary-question">
+                    <strong th:text="${result.questionText}">Frage</strong>
+                    <span class="question-type" th:text="'(' + ${result.questionType} + ')'"></span>
+                </div>
+                <div class="summary-answer">
+                    <!-- For MATRIX, show each row:column pair -->
+                    <div th:if="${result.questionType == 'MATRIX'}">
+                        <ul>
+                            <li th:each="answer : ${result.answers}" th:text="${answer}">Zeile: Wert</li>
+                        </ul>
+                    </div>
+                    <!-- For MULTIPLE_CHOICE, show as comma-separated list -->
+                    <div th:if="${result.questionType == 'MULTIPLE_CHOICE'}">
+                        <span th:text="${result.displayAnswer}">Antworten</span>
+                    </div>
+                    <!-- For SINGLE_CHOICE, show single value -->
+                    <div th:if="${result.questionType == 'SINGLE_CHOICE'}">
+                        <span th:text="${result.displayAnswer}">Antwort</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-actions">
+            <!-- Restart -->
+            <form method="post" action="/survey/restart" class="inline-form">
+                <button type="submit" class="btn btn-warning">Neu starten</button>
+            </form>
+
+            <!-- Placeholder for export/import (S7) -->
+            <div th:unless="${imported}" class="export-import-placeholder">
+                <!-- Export/Import buttons will be added in Issue #8 -->
+            </div>
+        </div>
+    </div>
+</body>
+</html>
