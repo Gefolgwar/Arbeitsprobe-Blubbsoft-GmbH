@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title} + ' — Frage ' + ${questionNumber}">Fragebogen</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1 th:text="${title}">Fragebogen</h1>
+        <p class="progress">Frage <span th:text="${questionNumber}">1</span> von <span th:text="${totalQuestions}">5</span></p>
+
+        <div class="question-card">
+            <h2 th:text="${question.text}">Frage</h2>
+
+            <form method="post" action="/survey/answer">
+                <input type="hidden" name="questionId" th:value="${question.id}">
+                <input type="hidden" name="questionType" th:value="${question.type}">
+
+                <!-- SINGLE_CHOICE: Radio buttons -->
+                <div th:if="${question.type.name() == 'SINGLE_CHOICE'}" class="options">
+                    <div th:each="option : ${question.options}" class="option">
+                        <label>
+                            <input type="radio" name="answer" th:value="${option}"
+                                   th:checked="${previousAnswer != null and previousAnswer.contains(option)}">
+                            <span th:text="${option}">Option</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- MULTIPLE_CHOICE: Checkboxes -->
+                <div th:if="${question.type.name() == 'MULTIPLE_CHOICE'}" class="options">
+                    <div th:each="option, iterStat : ${question.options}" class="option">
+                        <label>
+                            <input type="checkbox" th:name="'answer' + ${iterStat.index}" th:value="${option}"
+                                   th:checked="${previousAnswer != null and previousAnswer.contains(option)}">
+                            <span th:text="${option}">Option</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- MATRIX: Table with radio buttons per row -->
+                <div th:if="${question.type.name() == 'MATRIX'}" class="matrix">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th th:each="col : ${question.columns}" th:text="${col}">Spalte</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="row : ${question.rows}">
+                                <td class="row-label" th:text="${row}">Zeile</td>
+                                <td th:each="col : ${question.columns}" class="matrix-cell">
+                                    <input type="radio" th:name="'row_' + ${row}" th:value="${col}"
+                                           th:checked="${previousAnswer != null and previousAnswer.contains(row + ': ' + col)}">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="buttons">
+                    <button type="submit" class="btn btn-primary">Weiter</button>
+                </div>
+            </form>
+
+            <!-- Back button -->
+            <form th:if="${canGoBack}" method="post" action="/survey/back" class="back-form">
+                <button type="submit" class="btn btn-secondary">Zurück</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
