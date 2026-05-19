@@ -13,7 +13,7 @@ class QuestionnaireLoaderTest {
 
     @BeforeEach
     void setUp() {
-        service = new QuestionnaireService(new ObjectMapper());
+        service = new QuestionnaireService(new ObjectMapper(), new ConditionEvaluator());
     }
 
     @Test
