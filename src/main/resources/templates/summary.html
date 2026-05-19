@@ -11,7 +11,12 @@
         <h2 th:text="${title}">Fragebogen</h2>
 
         <div th:if="${imported}" class="imported-badge">
-            <strong>Importierte Ergebnisse</strong>
+            <strong>📥 Importierte Ergebnisse</strong>
+            <span th:if="${exportedAt}" th:text="' (exportiert am ' + ${exportedAt} + ')'"></span>
+        </div>
+
+        <div th:if="${error}" class="error-message">
+            <strong>Fehler:</strong> <span th:text="${error}">Fehlermeldung</span>
         </div>
 
         <div class="summary-list">
@@ -21,17 +26,14 @@
                     <span class="question-type" th:text="'(' + ${result.questionType} + ')'"></span>
                 </div>
                 <div class="summary-answer">
-                    <!-- For MATRIX, show each row:column pair -->
                     <div th:if="${result.questionType == 'MATRIX'}">
                         <ul>
                             <li th:each="answer : ${result.answers}" th:text="${answer}">Zeile: Wert</li>
                         </ul>
                     </div>
-                    <!-- For MULTIPLE_CHOICE, show as comma-separated list -->
                     <div th:if="${result.questionType == 'MULTIPLE_CHOICE'}">
                         <span th:text="${result.displayAnswer}">Antworten</span>
                     </div>
-                    <!-- For SINGLE_CHOICE, show single value -->
                     <div th:if="${result.questionType == 'SINGLE_CHOICE'}">
                         <span th:text="${result.displayAnswer}">Antwort</span>
                     </div>
@@ -40,15 +42,22 @@
         </div>
 
         <div class="summary-actions">
+            <!-- Export -->
+            <div th:unless="${imported}">
+                <a href="/summary/export" class="btn btn-export">JSON speichern</a>
+            </div>
+
+            <!-- Import -->
+            <form method="post" action="/summary/import" enctype="multipart/form-data" class="inline-form">
+                <label for="file-upload" class="btn btn-import">JSON öffnen</label>
+                <input id="file-upload" type="file" name="file" accept=".json" style="display:none;"
+                       onchange="this.form.submit();">
+            </form>
+
             <!-- Restart -->
             <form method="post" action="/survey/restart" class="inline-form">
                 <button type="submit" class="btn btn-warning">Neu starten</button>
             </form>
-
-            <!-- Placeholder for export/import (S7) -->
-            <div th:unless="${imported}" class="export-import-placeholder">
-                <!-- Export/Import buttons will be added in Issue #8 -->
-            </div>
         </div>
     </div>
 </body>
