@@ -154,6 +154,8 @@ Das `condition`-Objekt ist **optional**. Wenn vorhanden, wird die Frage **nur an
 | `POST /survey/answer` | POST | Nimmt Antwort entgegen, speichert in Session, pusht Frage-ID auf History-Stack, Redirect auf `GET /survey` |
 | `POST /survey/back` | POST | Poppt letzte Frage-ID vom History-Stack, entfernt deren Antwort, Redirect auf `GET /survey` |
 | `GET /summary` | GET | Zeigt Zusammenfassung aller beantworteten Fragen mit Antworten |
+| `GET /summary/export` | GET | Exportiert die Ergebnisse als JSON-Datei (Download). Enthält Fragebogen-Titel, Zeitstempel, Fragen mit Antworten |
+| `POST /summary/import` | POST | Importiert eine zuvor exportierte JSON-Datei und zeigt die Ergebnisse auf der Zusammenfassungsseite an |
 | `POST /survey/restart` | POST | Setzt Session zurück, startet Fragebogen von vorn |
 
 ### 4.4 Thymeleaf-Templates
@@ -161,7 +163,42 @@ Das `condition`-Objekt ist **optional**. Wenn vorhanden, wird die Frage **nur an
 | Template | Beschreibung |
 |---|---|
 | `survey.html` | Dynamische Darstellung einer Frage. Rendert je nach `type`: Radio-Buttons (`SINGLE_CHOICE`), Checkboxen (`MULTIPLE_CHOICE`) oder Matrix-Tabelle (`MATRIX`). Enthält „Weiter"- und „Zurück"-Buttons. |
-| `summary.html` | Zusammenfassungsseite mit allen beantworteten Fragen und Antworten. Enthält „Neu starten"-Button. |
+| `summary.html` | Zusammenfassungsseite mit allen beantworteten Fragen und Antworten. Enthält „Neu starten"-Button, „JSON speichern"-Button (Export) und „JSON öffnen"-Button (Import). |
+
+### 4.5 JSON-Export/Import-Format (Ergebnisse)
+
+Das Export-Format enthält alle Informationen, um die Ergebnisse später wieder anzeigen zu können:
+
+```json
+{
+  "questionnaire": "Kinder und Stadtteil",
+  "exportedAt": "2025-07-15T14:30:00",
+  "results": [
+    {
+      "questionId": "q1",
+      "questionText": "Haben Sie Kinder?",
+      "questionType": "SINGLE_CHOICE",
+      "answers": ["Ja"]
+    },
+    {
+      "questionId": "q4",
+      "questionText": "Wie zufrieden sind Sie mit dem Schulessen in Bezug auf....",
+      "questionType": "MATRIX",
+      "answers": ["Preis: Einigermаßen zufrieden", "Qualität: Sehr zufrieden"]
+    }
+  ]
+}
+```
+
+**Export-Ablauf ("JSON speichern"):**
+1. Benutzer klickt auf der Summary-Seite „JSON speichern"
+2. `GET /summary/export` erzeugt die JSON-Datei serverseitig aus der aktuellen Session
+3. Der Browser lädt die Datei als `ergebnisse-{questionnaire-title}-{timestamp}.json` herunter
+
+**Import-Ablauf ("JSON öffnen"):**
+1. Benutzer klickt „JSON öffnen" → Datei-Dialog öffnet sich
+2. Die ausgewählte JSON-Datei wird via `POST /summary/import` (Multipart) hochgeladen
+3. Der Server parst die Datei und zeigt die Ergebnisse auf der Summary-Seite an (read-only, ohne Session-Zustand zu ändern)
 
 ---
 
@@ -287,6 +324,8 @@ Der Dateiname kann geändert werden, um einen anderen Fragebogen zu laden. Nach 
 - [ ] **AC-6:** Die „Zurück"-Taste navigiert zur vorherigen tatsächlich angezeigten Frage; die vorherige Antwort ist vorausgewählt
 - [ ] **AC-7:** Nach der letzten relevanten Frage wird eine Zusammenfassung aller beantworteten Fragen mit Antworten angezeigt
 - [ ] **AC-8:** Der Fragebogen kann neu gestartet werden
+- [ ] **AC-8a:** Über den Button „JSON speichern" können die Ergebnisse als JSON-Datei heruntergeladen werden
+- [ ] **AC-8b:** Über den Button „JSON öffnen" kann eine zuvor gespeicherte JSON-Datei geladen und die Ergebnisse auf der Zusammenfassungsseite angezeigt werden
 - [ ] **AC-9:** Beide Beispiel-Fragebögen (Kinder/Stadtteil und Verkehr) funktionieren korrekt mit bedingter Logik
 - [ ] **AC-10:** Die JSON-Datenstruktur ist im `README.md` dokumentiert, sodass ein neuer Fragebogen ohne Programmierkenntnisse erstellt werden kann
 - [ ] **AC-11:** Das Projekt enthält den Maven Wrapper, sodass keine lokale Maven-Installation nötig ist
