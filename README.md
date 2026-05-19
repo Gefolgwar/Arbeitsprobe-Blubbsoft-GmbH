@@ -41,12 +41,6 @@ Die Anwendung läuft anschließend unter **http://localhost:8081**.
 
 Die erzeugte JAR-Datei liegt danach unter `target/`.
 
-### Tests ausführen
-
-```bash
-./mvnw test
-```
-
 ---
 
 ## Fragebogen wechseln
