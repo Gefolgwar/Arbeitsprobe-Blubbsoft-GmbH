@@ -1,0 +1,51 @@
+{
+  "title": "Kinder und Stadtteil",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "SINGLE_CHOICE",
+      "text": "Haben Sie Kinder?",
+      "options": ["Ja", "Nein"]
+    },
+    {
+      "id": "q2",
+      "type": "SINGLE_CHOICE",
+      "text": "Wie viele Kinder haben Sie?",
+      "options": ["1", "2", "3", "Mehr als 3"],
+      "condition": {
+        "questionId": "q1",
+        "operator": "EQUALS",
+        "value": "Ja"
+      }
+    },
+    {
+      "id": "q3",
+      "type": "MULTIPLE_CHOICE",
+      "text": "Welche Einrichtungen nutzen Ihre Kinder?",
+      "options": ["Kindergarten", "Grundschule", "Weiterf\u00fchrende Schule", "Hort", "Sportverein"],
+      "condition": {
+        "questionId": "q1",
+        "operator": "EQUALS",
+        "value": "Ja"
+      }
+    },
+    {
+      "id": "q4",
+      "type": "MATRIX",
+      "text": "Wie zufrieden sind Sie mit dem Schulessen?",
+      "rows": ["Preis", "Qualit\u00e4t", "Auswahl", "Portionsgr\u00f6\u00dfe"],
+      "columns": ["Sehr zufrieden", "Zufrieden", "Neutral", "Unzufrieden", "Sehr unzufrieden"],
+      "condition": {
+        "questionId": "q3",
+        "operator": "CONTAINS",
+        "value": "Grundschule"
+      }
+    },
+    {
+      "id": "q5",
+      "type": "SINGLE_CHOICE",
+      "text": "In welchem Stadtteil wohnen Sie?",
+      "options": ["Nord", "S\u00fcd", "Ost", "West", "Zentrum"]
+    }
+  ]
+}

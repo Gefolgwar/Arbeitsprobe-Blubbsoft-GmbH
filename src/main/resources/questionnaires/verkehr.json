@@ -1,0 +1,44 @@
+{
+  "title": "Verkehr",
+  "questions": [
+    {
+      "id": "v1",
+      "type": "MULTIPLE_CHOICE",
+      "text": "Welche Verkehrsmittel nutzen Sie regelm\u00e4\u00dfig?",
+      "options": ["Auto", "Bus", "U-Bahn", "Regionalzug", "Fahrrad", "Zu Fu\u00df"]
+    },
+    {
+      "id": "v2",
+      "type": "SINGLE_CHOICE",
+      "text": "Welche Art von Ticket nutzen Sie f\u00fcr den \u00d6PNV?",
+      "options": ["Einzelfahrschein", "Monatskarte", "Jahreskarte", "Deutschlandticket"],
+      "condition": {
+        "questionId": "v1",
+        "operator": "ANY_OF",
+        "values": ["Bus", "U-Bahn", "Regionalzug"]
+      }
+    },
+    {
+      "id": "v3",
+      "type": "SINGLE_CHOICE",
+      "text": "Wie oft haben Sie in den letzten 4 Wochen Versp\u00e4tungen im \u00d6PNV erlebt?",
+      "options": ["Nie", "1\u20132 Mal", "3\u20135 Mal", "Mehr als 5 Mal"],
+      "condition": {
+        "questionId": "v1",
+        "operator": "ANY_OF",
+        "values": ["Bus", "U-Bahn", "Regionalzug"]
+      }
+    },
+    {
+      "id": "v4",
+      "type": "SINGLE_CHOICE",
+      "text": "Nutzen Sie ein eigenes Auto oder einen Firmenwagen?",
+      "options": ["Eigenes Auto", "Firmenwagen", "Beides"],
+      "condition": {
+        "questionId": "v1",
+        "operator": "CONTAINS",
+        "value": "Auto"
+      }
+    }
+  ]
+}
