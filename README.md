@@ -19,7 +19,13 @@ Eine Java-Webanwendung auf Basis von Spring Boot, die Fragebögen aus JSON-Datei
 ./mvnw spring-boot:run
 ```
 
-### Windows
+### Windows (PowerShell)
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+### Windows (CMD)
 
 ```cmd
 mvnw.cmd spring-boot:run
