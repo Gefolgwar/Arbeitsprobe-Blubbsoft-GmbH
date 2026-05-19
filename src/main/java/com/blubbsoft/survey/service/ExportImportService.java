@@ -47,14 +47,6 @@ public class ExportImportService {
         }
     }
 
-    public SurveyResult importFromJson(byte[] jsonBytes) {
-        try {
-            return objectMapper.readValue(jsonBytes, SurveyResult.class);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Ungültige JSON-Datei: " + e.getMessage(), e);
-        }
-    }
-
     private SurveyResult buildSurveyResult(SurveySession session, Questionnaire questionnaire) {
         List<ResultEntry> entries = new ArrayList<>();
         Map<String, List<String>> answers = session.getAnswers();

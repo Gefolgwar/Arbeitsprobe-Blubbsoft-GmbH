@@ -50,11 +50,6 @@ public class QuestionnaireService {
         return questionnaire;
     }
 
-    /** Package-private setter for unit testing without reflection. */
-    void setQuestionnaire(Questionnaire questionnaire) {
-        this.questionnaire = questionnaire;
-    }
-
     public Question getQuestionById(String id) {
         return questionnaire.questions().stream()
                 .filter(q -> q.id().equals(id))
