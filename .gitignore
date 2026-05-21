@@ -8,6 +8,7 @@ target/
 .settings/
 .project
 .classpath
+.claude/settings.local.json
 
 # OS
 .DS_Store
